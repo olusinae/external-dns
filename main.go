@@ -82,6 +82,9 @@ func main() {
 		KubeMaster:                  cfg.Master,
 		ServiceTypeFilter:           cfg.ServiceTypeFilter,
 		IstioIngressGatewayServices: cfg.IstioIngressGatewayServices,
+		CFAPIEndpoint:               cfg.CFAPIEndpoint,
+		CFUsername:                  cfg.CFUsername,
+		CFPassword:                  cfg.CFPassword,
 	}
 
 	// Lookup all the selected sources by names and pass them the desired configuration.
@@ -206,9 +209,13 @@ func main() {
 			provider.NS1Config{
 				DomainFilter: domainFilter,
 				ZoneIDFilter: zoneIDFilter,
+				NS1Endpoint:  cfg.NS1Endpoint,
+				NS1IgnoreSSL: cfg.NS1IgnoreSSL,
 				DryRun:       cfg.DryRun,
 			},
 		)
+	case "transip":
+		p, err = provider.NewTransIPProvider(cfg.TransIPAccountName, cfg.TransIPPrivateKeyFile, domainFilter, cfg.DryRun)
 	default:
 		log.Fatalf("unknown dns provider: %s", cfg.Provider)
 	}
