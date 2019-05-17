@@ -41,6 +41,7 @@ type Config struct {
 	KubeConfig                  string
 	RequestTimeout              time.Duration
 	IstioIngressGatewayServices []string
+	IstioIngressVirtualServices []string
 	Sources                     []string
 	Namespace                   string
 	AnnotationFilter            string
@@ -127,6 +128,7 @@ var defaultConfig = &Config{
 	KubeConfig:                  "",
 	RequestTimeout:              time.Second * 30,
 	IstioIngressGatewayServices: []string{"istio-system/istio-ingressgateway"},
+	IstioIngressVirtualServices: []string{"istio-system/istio-ingressvirtualservice"},
 	Sources:                     nil,
 	Namespace:                   "",
 	AnnotationFilter:            "",
@@ -250,6 +252,7 @@ func (cfg *Config) ParseFlags(args []string) error {
 
 	// Flags related to Istio
 	app.Flag("istio-ingress-gateway", "The fully-qualified name of the Istio ingress gateway service. Flag can be specified multiple times (default: istio-system/istio-ingressgateway)").Default("istio-system/istio-ingressgateway").StringsVar(&cfg.IstioIngressGatewayServices)
+	app.Flag("istio-ingress-virtualservice", "The fully-qualified name of the Istio ingress virtualservice. Flag can be specified multiple times (default: istio-system/istio-ingressvirtualservice)").Default("istio-system/istio-ingressvirtualservice").StringsVar(&cfg.IstioIngressVirtualServices)
 
 	// Flags related to cloud foundry
 	app.Flag("cf-api-endpoint", "The fully-qualified domain name of the cloud foundry instance you are targeting").Default(defaultConfig.CFAPIEndpoint).StringVar(&cfg.CFAPIEndpoint)
@@ -257,7 +260,7 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("cf-password", "The password to log into the cloud foundry API").Default(defaultConfig.CFPassword).StringVar(&cfg.CFPassword)
 
 	// Flags related to processing sources
-	app.Flag("source", "The resource types that are queried for endpoints; specify multiple times for multiple sources (required, options: service, ingress, fake, connector, istio-gateway, cloudfoundry, crd").Required().PlaceHolder("source").EnumsVar(&cfg.Sources, "service", "ingress", "istio-gateway", "cloudfoundry", "fake", "connector", "crd")
+	app.Flag("source", "The resource types that are queried for endpoints; specify multiple times for multiple sources (required, options: service, ingress, fake, connector, istio-gateway, cloudfoundry, crd").Required().PlaceHolder("source").EnumsVar(&cfg.Sources, "service", "ingress", "istio-gateway", "istio-virtualservice", "cloudfoundry", "fake", "connector", "crd")
 	app.Flag("namespace", "Limit sources of endpoints to a specific namespace (default: all namespaces)").Default(defaultConfig.Namespace).StringVar(&cfg.Namespace)
 	app.Flag("annotation-filter", "Filter sources managed by external-dns via annotation using label selector semantics (default: all sources)").Default(defaultConfig.AnnotationFilter).StringVar(&cfg.AnnotationFilter)
 	app.Flag("fqdn-template", "A templated string that's used to generate DNS names from sources that don't define a hostname themselves, or to add a hostname suffix when paired with the fake source (optional). Accepts comma separated list for multiple global FQDN.").Default(defaultConfig.FQDNTemplate).StringVar(&cfg.FQDNTemplate)
