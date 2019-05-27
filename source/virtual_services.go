@@ -39,7 +39,7 @@ import (
 type virtualServiceSource struct {
 	kubeClient                  kubernetes.Interface
 	istioClient                 istiomodel.ConfigStore
-	istioIngressVirtualServices []string
+	IstioIngressGatewayServices []string
 	namespace                   string
 	annotationFilter            string
 	fqdnTemplate                *template.Template
@@ -51,7 +51,7 @@ type virtualServiceSource struct {
 func NewIstioVirtualServiceSource(
 	kubeClient kubernetes.Interface,
 	istioClient istiomodel.ConfigStore,
-	istioIngressVirtualServices []string,
+	IstioIngressGatewayServices []string,
 	namespace string,
 	annotationFilter string,
 	fqdnTemplate string,
@@ -62,8 +62,8 @@ func NewIstioVirtualServiceSource(
 		tmpl *template.Template
 		err  error
 	)
-	for _, lbService := range istioIngressVirtualServices {
-		if _, _, err = parseIngressVirtualService(lbService); err != nil {
+	for _, lbService := range IstioIngressGatewayServices {
+		if _, _, err = parseIngressGateway(lbService); err != nil {
 			return nil, err
 		}
 	}
@@ -80,7 +80,7 @@ func NewIstioVirtualServiceSource(
 	return &virtualServiceSource{
 		kubeClient:                  kubeClient,
 		istioClient:                 istioClient,
-		istioIngressVirtualServices: istioIngressVirtualServices,
+		IstioIngressGatewayServices: IstioIngressGatewayServices,
 		namespace:                   namespace,
 		annotationFilter:            annotationFilter,
 		fqdnTemplate:                tmpl,
@@ -167,7 +167,7 @@ func (sc *virtualServiceSource) endpointsFromTemplate(config *istiomodel.Config)
 	targets := getTargetsFromTargetAnnotation(config.Annotations)
 
 	if len(targets) == 0 {
-		targets, err = sc.targetsFromIstioIngressVirtualServices()
+		targets, err = sc.targetsFromIstioIngressGatewayServices()
 		if err != nil {
 			return nil, err
 		}
@@ -222,9 +222,9 @@ func (sc *virtualServiceSource) setResourceLabel(config istiomodel.Config, endpo
 	}
 }
 
-func (sc *virtualServiceSource) targetsFromIstioIngressVirtualServices() (targets endpoint.Targets, err error) {
-	for _, lbService := range sc.istioIngressVirtualServices {
-		lbNamespace, lbName, err := parseIngressVirtualService(lbService)
+func (sc *virtualServiceSource) targetsFromIstioIngressGatewayServices() (targets endpoint.Targets, err error) {
+	for _, lbService := range sc.IstioIngressGatewayServices {
+		lbNamespace, lbName, err := parseIngressGateway(lbService)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +257,7 @@ func (sc *virtualServiceSource) endpointsFromVirtualServiceConfig(config istiomo
 	targets := getTargetsFromTargetAnnotation(config.Annotations)
 
 	if len(targets) == 0 {
-		targets, err = sc.targetsFromIstioIngressVirtualServices()
+		targets, err = sc.targetsFromIstioIngressGatewayServices()
 		if err != nil {
 			return nil, err
 		}
@@ -283,15 +283,4 @@ func (sc *virtualServiceSource) endpointsFromVirtualServiceConfig(config istiomo
 	}
 
 	return endpoints, nil
-}
-
-func parseIngressVirtualService(ingressVirtualService string) (namespace, name string, err error) {
-	parts := strings.Split(ingressVirtualService, "/")
-	if len(parts) != 2 {
-		err = fmt.Errorf("invalid ingress virtualService service (namespace/name) found '%v'", ingressVirtualService)
-	} else {
-		namespace, name = parts[0], parts[1]
-	}
-
-	return
 }

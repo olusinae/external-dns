@@ -287,14 +287,3 @@ func (sc *gatewaySource) endpointsFromGatewayConfig(config istiomodel.Config) ([
 
 	return endpoints, nil
 }
-
-func parseIngressGateway(ingressGateway string) (namespace, name string, err error) {
-	parts := strings.Split(ingressGateway, "/")
-	if len(parts) != 2 {
-		err = fmt.Errorf("invalid ingress gateway service (namespace/name) found '%v'", ingressGateway)
-	} else {
-		namespace, name = parts[0], parts[1]
-	}
-
-	return
-}
